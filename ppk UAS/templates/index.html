@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Data Pembeli</title>
+  <style>
+    input {
+      margin-right: 5px;
+    }
+    li {
+      margin-bottom: 8px;
+      list-style: none;
+    }
+    button {
+      margin-left: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+      border: 1px solid #83c4e0;
+    }
+    th {
+      background-color: #3f64c9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Daftar Data Pembeli</h1>
+
+  <form id="pembeliForm">
+    <input type="text" id="nama" placeholder="Nama" required>
+    <input type="number" id="umur" placeholder="Umur" required>
+    <input type="text" id="warnafavorit" placeholder="Warna Favorit" required>
+    <button type="submit">Tambah Pembeli</button>
+  </form>
+
+  <h2>Daftar Pembeli</h2>
+  <table id="tablePembeli">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nama</th>
+        <th>Umur</th>
+        <th>Warna Favorit</th>
+        <th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="listPembeli"></tbody>
+  </table>
+
+  <script>
+    // Load data pembeli (GET)
+    function loadPembeli() {
+      fetch('/pembeli')
+        .then(response => response.json())
+        .then(data => {
+          const tbody = document.getElementById('listPembeli');
+          tbody.innerHTML = ''; // Clear existing data
+          data.forEach(p => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${p.pembeli_id}</td>
+              <td>${p.nama}</td>
+              <td>${p.umur}</td>
+              <td>${p.warna}</td>
+              <td>
+                <button onclick="hapusPembeli(${p.pembeli_id})">Hapus</button>
+                <button onclick="editPembeli(${p.pembeli_id}, '${p.nama}', ${p.umur}, '${p.warnafavorit}')">Edit</button>
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+    }
+
+    // Tambah data pembeli (POST)
+    document.getElementById('pembeliForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const nama = document.getElementById('nama').value;
+  const umur = document.getElementById('umur').value;
+  const warnafavorit = document.getElementById('warnafavorit').value;
+
+  fetch('/pembeli', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ nama, umur, warna: warnafavorit })
+  })
+  .then(response => response.json())
+  .then(result => {
+    alert(result.message || 'Data berhasil ditambahkan');
+    loadPembeli(); // Refresh list
+    document.getElementById('pembeliForm').reset();
+  });
+});
+
+
+    // Hapus pembeli (DELETE)
+    function hapusPembeli(id) {
+      fetch(`/pembeli`, {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ pembeli_id: id })
+      })
+      .then(response => response.json())
+      .then(result => {
+        alert(result.message || 'Data berhasil dihapus');
+        loadPembeli();
+      });
+    }
+
+    // Edit pembeli (PUT)
+    function editPembeli(id, nama, umur, warnafavorit) {
+      const newNama = prompt("Nama baru:", nama);
+      const newUmur = prompt("Umur baru:", umur);
+      const newWarnaFavorit = prompt("Warna favorit baru:", warnafavorit);
+
+      if (newNama && newUmur && newWarnaFavorit) {
+        fetch(`/pembeli`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            pembeli_id: id,
+            nama: newNama,
+            umur: newUmur,
+            warnafavorit: newWarnaFavorit
+          })
+        })
+        .then(response => response.json())
+        .then(result => {
+          alert(result.message || 'Data berhasil diubah');
+          loadPembeli();
+        });
+      }
+    }
+
+    // Load saat halaman pertama kali dibuka
+    loadPembeli();
+  </script>
+
+</body>
+</html>

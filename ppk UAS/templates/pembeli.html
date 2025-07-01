@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Daftar Data Pembeli</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        h1, h2 {
+            color: #3ab0d1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #2d81e2;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #4b80f1;
+            color: white;
+        }
+
+        input[type="text"] {
+            margin-right: 10px;
+            padding: 5px;
+        }
+
+        button {
+            padding: 5px 10px;
+            margin: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Daftar Data Pembeli</h1>
+
+    <div>
+        <input type="text" id="nama" placeholder="Nama">
+        <input type="text" id="umur" placeholder="Umur">
+        <input type="text" id="warna" placeholder="Warna Favorit">
+        <button onclick="tambahPembeli()">Tambah Pembeli</button>
+    </div>
+
+    <h2>Daftar Pembeli</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nama</th>
+                <th>Umur</th>
+                <th>Warna Favorit</th>
+                <th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody id="tabel-pembeli">
+            <!-- Data akan dimuat otomatis -->
+        </tbody>
+    </table>
+
+    <script>
+        function loadData() {
+            fetch('/pembeli')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.getElementById('tabel-pembeli');
+                    tbody.innerHTML = '';
+                    data.forEach(p => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${p.pembeli_id}</td>
+                                <td>${p.nama}</td>
+                                <td>${p.umur}</td>
+                                <td>${p.warna}</td>
+                                <td>
+                                    <button onclick="hapus(${p.pembeli_id})">Hapus</button>
+                                    <button onclick="edit(${p.pembeli_id}, '${p.nama}', '${p.umur}', '${p.warna}')">Edit</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                });
+        }
+
+        function tambahPembeli() {
+            const nama = document.getElementById('nama').value;
+            const umur = document.getElementById('umur').value;
+            const warna = document.getElementById('warna').value;
+
+            fetch('/pembeli', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama: nama, umur: umur, warna: warna })
+            })
+            .then(response => response.json())
+            .then(() => {
+                loadData();
+                document.getElementById('nama').value = '';
+                document.getElementById('umur').value = '';
+                document.getElementById('warna').value = '';
+            });
+        }
+
+        function hapus(pembeli_id) {
+            fetch('/pembeli', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pembeli_id: pembeli_id })
+            })
+            .then(response => response.json())
+            .then(() => loadData());
+        }
+
+        function edit(pembeli_id, nama, umur, warna) {
+            const newNama = prompt("Nama baru:", nama);
+            const newUmur = prompt("Umur baru:", umur);
+            const newWarna = prompt("Warna Favorit baru:", warna);
+
+            fetch('/pembeli', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    pembeli_id: pembeli_id,
+                    nama: newNama,
+                    umur: newUmur,
+                    warna: newWarna
+                })
+            })
+            .then(response => response.json())
+            .then(() => loadData());
+        }
+
+        window.onload = loadData;
+    </script>
+
+</body>
+</html>
